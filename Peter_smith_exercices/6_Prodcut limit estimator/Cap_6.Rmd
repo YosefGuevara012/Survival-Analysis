@@ -1,0 +1,115 @@
+---
+title: "Chapter 6. Product Limit stimator Peter smith"
+output: html_notebook
+---
+
+### Required libraries
+
+```{r}
+
+library(survival)
+```
+
+```{r}
+
+knitr::include_graphics("6_2.PNG")
+
+```
+
+### Required data
+
+```{r}
+
+### Patients were given 6-mercaptopurine
+
+MP <- c(6,6,6,6,7,9,10,10,11,13,16,17,19,20,22,23,25,32,32,34,35)
+cens1 <- c(1,1,1,0,1,0,1,0,0,1,1,0,0,0,1,1,0,0,0,0,0)
+
+### Patients were given Placebo
+
+placebo <- c(1,1,2,2,3,4,4,5,5,8,8,8,8,11,11,12,12,15,17,22,23)
+cens2 <- rep(1,21)
+  
+```
+
+### Joining the Data
+
+```{r}
+
+
+Total <- c(MP,placebo)
+Total <- log(Total)
+cens <- c(cens1, cens2)
+groups <- c(rep(1,21),rep(0,21)) 
+
+```
+
+### PL-Estimator
+
+```{r}
+km.model <- survfit(Surv(Total,cens)~ groups)
+```
+
+### Comparation Chart
+
+```{r}
+plot(km.model, conf.int=F, xlab = "Remission", ylab = "PL-estimator", main="Comparing survival prospects for two groups")
+
+```
+
+
+```{r}
+
+knitr::include_graphics("6_6.PNG")
+
+```
+
+
+
+### Required data
+
+```{r}
+## Stanford Heart Transplat Data
+
+## Reading data
+
+heart <- read.csv("heart_data.csv", header=T,sep=";")
+head(heart)
+```
+```{r}
+### Data sorting based on the amount of days
+
+i <- order(heart$Days)
+heart <- heart[i,]
+
+head(heart)
+```
+### PL- Estimator
+
+```{r}
+
+km.model <- survfit(Surv(heart$Days,heart$Cens)~1)
+
+st <- km.model$surv
+tekm <- km.model$time
+inv_Phi <- qnorm(st)
+
+```
+
+### Graficando probabilidad
+```{r}
+plot(km.model, conf.int=T, xlab = "Time (Days)", ylab="% Alive = S(t)", main="KM-Model for Heart Transplat Patients")
+```
+
+
+```{r}
+
+knitr::include_graphics("6_6_1.PNG")
+
+```
+
+```{r}
+
+knitr::include_graphics("6_6_2.PNG")
+
+```
