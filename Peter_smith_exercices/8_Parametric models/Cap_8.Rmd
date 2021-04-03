@@ -1,0 +1,96 @@
+---
+title: "Chapter 8 Fitting parametric regression models"
+output: html_notebook
+---
+
+```{r}
+
+library(survival)
+
+```
+
+
+```{r}
+
+knitr::include_graphics("8_3.PNG")
+
+```
+
+### Required data
+
+```{r}
+
+fluid <- read.csv("fluid.csv", header=T, sep =";")
+head(fluid)
+
+```
+### Diagnostic 1.
+
+Calculating plotting position for the 4 covariates 
+
+```{r}
+
+### Plotting positions Failure 30KV
+
+i <- seq(1:length(fluid$Failure_30KV))
+pFailure <- 1 - ((i-0.5)/length(i))
+
+### Plotting positions at_test 32KV
+
+i <- seq(1:length(fluid$at_test_32KV))
+pTest <- 1 - ((i-0.5)/length(i))
+
+### Plotting positions Voltage 34KV
+
+i <- seq(1:length(fluid$voltage_34KV))
+pVoltage <- 1 - ((i-0.5)/length(i))
+
+### Plotting positions levels 36KV
+
+i <- seq(1:length(fluid$levels_36KV))
+pLevels <- 1 - ((i-0.5)/length(i))
+
+```
+
+### Diagnostic 1 graph
+```{r}
+
+### Plotting the data
+
+plot(log(fluid$at_test_32KV),pTest,col="red", pch = 19 , ylab= "Plotting position S(t)", xlab="Log covariates")
+points(log(fluid$voltage_34KV),pVoltage,col="green", pch = 19)
+points(log(fluid$Failure_30KV),pFailure,col="blue", pch = 19)
+points(log(fluid$levels_36KV),pLevels,col="orange", pch = 19)
+legend("bottomleft", legend=c("Test", "Voltage", "Failure", "Levels"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
+```
+### Diagnostic 3 graph
+
+
+
+```{r}
+
+### Plotting the data
+
+plot(log(fluid$at_test_32KV),log(-1*log(pTest)),col="red", pch = 19 , ylab= "Log log Plotting position", xlab="Log covariates")
+points(log(fluid$voltage_34KV),log(-1*log(pVoltage)),col="green", pch = 19)
+points(log(fluid$Failure_30KV),log(-1*log(pFailure)),col="blue", pch = 19)
+points(log(fluid$levels_36KV),log(-1*log(pLevels)),col="orange", pch = 19)
+legend("topleft", legend=c("Test", "Voltage", "Failure", "Levels"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
+
+```
+
+```{r}
+
+knitr::include_graphics("8_5.PNG")
+
+```
+
+
+### Required data
+
+```{r}
+
+switches <- read.csv("switches.csv", header=T, sep =";")
+head(switches)
+
+```
