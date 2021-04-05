@@ -4,7 +4,49 @@ output: html_notebook
 ---
 
 ```{r}
-stress <- read.csv("fluid.csv", header=T, sep =";")
+stress <- read.csv("stress.csv", header=T, sep =";")
+attach(stress)
 head(stress)
+```
+
+```{r}
+n <- length(S1)
+j<- seq(1,length(S1))
+p <- (j-0.5)/n
+p <- 1 - p
+
+```
+
+```{r}
+### Plotting the data
+
+plot(log(S1),p,col="red", pch = 19 , ylab= "Plotting position S(t)", xlab="Log covariates",xlim=c(-5,5),ylim=c(0,1))
+points(log(S2),p,col="green", pch = 19)
+points(log(S3),p,col="blue", pch = 19)
+points(log(S4),p,col="orange", pch = 19)
+legend("bottomleft", legend=c("S1", "S2", "S3", "S4"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
+```
+
+```{r}
+
+SD1 <- sd(log(S1))
+SD2 <- sd(log(S2))
+SD3 <- sd(log(S3))
+SD4 <- sd(log(S4))
+
+cbind(SD1, SD2, SD3, SD4)
+
+```
+
+```{r}
+
+ploglog <- log(-log(p))
+
+plot(log(S1),ploglog,col="red", pch = 19 , ylab= "Plotting position S(t)", xlab="Log covariates",xlim=c(-3,4),ylim=c(-3.5,1.5))
+points(log(S2),ploglog,col="green", pch = 19)
+points(log(S3),ploglog,col="blue", pch = 19)
+points(log(S4),ploglog,col="orange", pch = 19)
+legend("topleft", legend=c("S1", "S2", "S3", "S4"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
+
 ```
 

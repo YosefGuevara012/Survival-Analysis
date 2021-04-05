@@ -44,9 +44,11 @@ head(p)
 
 months <- sort(months)
 data <- as.data.frame(cbind(months,1-p))
-plot(months,1-p, main="Empirical Survival Function", xlab = "Months in office", ylab = "Survival Probability")
+plot(months,1-p, main="Empirical Survival Function", xlab = "Months in office", ylab = "Survival Probability", col ="red")
 
 ```
+
+
 ### Estimate probablity of survival beyond full 3 years 
 
 Knowing that the estimate probability of the survival fucntion is giving by:
@@ -55,7 +57,7 @@ $$S_n\left(y\right)=\frac{number\:of\:observations\:>y}{n}=\frac{1}{n}\sum _{i=1
 
 then:
 
-$$S_{29}\left(17\right)=\frac{1}{29}\sum _{i=1}^n\:I\left(17,\infty \right)\left(Y_i\right)=\frac{12}{29}\:=\:0.4137$$
+$$S_{29}\left(36\right)=\frac{1}{29}\sum _{i=1}^n\:I\left(36,\infty \right)\left(Y_i\right)=\frac{12}{29}\:=\:0.4137$$
 ### Confidence interval
 
 
@@ -107,9 +109,17 @@ head(p)
 ```{r}
 ## Empirical survivor plot
 
-Days <- sort(Days)
-plot(Days,1-p, main="Empirical S(t) Heart transplant", xlab = "
-Days since heart transplant", ylab = "Survival Probability")
+i <- order(heart$Days)
+heart <- heart[i,]
+p <- 1-p
+
+Days <- heart$Days
+Cens <- heart$Cens
+
+newHeart <- as.data.frame(cbind(Days,Cens,p))
+newHeart <- subset(newHeart, Cens==1)
+plot(newHeart$Days,newHeart$p, main="Empirical S(t) Heart transplant", xlab = "
+Days since heart transplant", ylab = "Survival Probability", col="red")
 
 ```
 
@@ -118,13 +128,13 @@ Days since heart transplant", ylab = "Survival Probability")
 ```{r}
 ## Looking on the data greater than 1000
 
-sum(Days > 1000)
+sum(heart$Days > 1000)
 
 ```
 
 Then by the definition 1.3:
 
-$$S_{69}\left(61\right)=\frac{1}{69}\sum \:_{i=1}^{69}\:I\left(61,\infty \:\right)\left(Y_i\right)=\frac{2}{69}=0.1159$$
+$$S_{69}\left(1000\right)=\frac{1}{69}\sum \:_{i=1}^{69}\:I\left(1000,\infty \:\right)\left(Y_i\right)=\frac{8}{69}=0.1159$$
 #### Confidence interval
 
 The approximate confidence interval based in two standard error is:
@@ -141,52 +151,63 @@ knitr::include_graphics("4_3.PNG")
 The defitnion 4.6 says that the hazard plot is given by:
 
 
-```{r}
-
-k <- seq(69,1)
-k_inv <-c()
-
-for (i in 1:69){
-  if(Cens[i] == 0){
-    k_inv[i] <- 0
-  }else{
-    k_inv[i] <- round(1/i,5)
-  }
-}
-
-
-
-cbind(Days,Cens, k, k_inv)
-```
-
-
 $$\left(\alpha _i,y_{\left(j\right)}\right)$$
 
 Where
 
 $$\alpha _j=\sum \:_{i=1}^j\left(\frac{1}{n-i+1}\right)$$
 ```{r}
-alpha <-c()
-sumatory <- c()
 
-for(j in 1:length(Days)){
+### Calculation of the empirical and accumulative Hazard
+
+k <- seq(69,1)
+Emp.h <- c()
+Days <- heart$Days 
+Cens <- heart$Cens
+
+### The following cycles calculate all the data for the empirical risk, for ease of calculation the censored data are filled with zeros.
+
+
+for(i in 1:69){
   
-  for(i in 1:j){
+  if(Cens[i] == 0){
     
-    sumatory[i]<- (1/(length(Days)-i+1))
+    Emp.h[i]= 0
+
     
+  }else{
+    
+    Emp.h[i] = 1/k[i]
+
   }
-  alpha[j]<- sum(sumatory)
-  sumatory <- 0
+  
 }
 
+cum.H <- cumsum(Emp.h)
+
+for(i in 1:69){
+  
+  if(Cens[i] == 0){
+    
+    cum.H[i]= 0
+
+  }
+}
+
+
+harzard.score<- as.data.frame(cbind(Days,Cens, k, Emp.h, cum.H))
+
+head(harzard.score)
 ```
 
 
 
 ```{r}
-plot(Days,alpha, main="Hazard Plot", xlab = "
-Days since heart transplant", ylab = "Hazard plot score")
+
+### Building the graph
+
+hz.plotting <- subset(harzard.score, Cens == 1)
+plot(hz.plotting$Days,hz.plotting$Emp.h, main="Hazard Plot", xlab = "Days since heart transplant", ylab = "Hazard plot score", col="red")
 ```
 
 ```{r}
@@ -194,6 +215,17 @@ Days since heart transplant", ylab = "Hazard plot score")
 knitr::include_graphics("4_3_1.PNG")
 
 ```
+
+```{r}
+
+### Estimated accrued risk at 1,000 days, the closest point is 994 days.
+
+hz.plotting$cum.H[hz.plotting$Days == 994]
+
+```
+
+
+Based on the calculations in the table above, we can say that the accumulated risk at 1000 days is 1.2918.
 
 knowing that
 
@@ -207,6 +239,15 @@ $$ H_{69}\left(61\right)=-ln\left(0.0444\right)=3.1169$$
 ```{r}
 
 knitr::include_graphics("4_3_2.PNG")
+
+```
+```{r}
+
+inv_phi <- qnorm(newHeart$p)
+result.lm <- lm(inv_phi~log(newHeart$Days))
+
+plot(log(newHeart$Days),inv_phi, main = "Lognormal distribution for heart transplant",xlab="log(Days)", sub="log-normal",ylab=expression(Phi^-1 * (S(t))))
+abline(result.lm, col="red")
 
 ```
 

@@ -159,6 +159,8 @@ result.lm36 <- lm(logLogSurvEst36 ~ logSurvTime36)
 
 ```
 
+### Weibull model fitting graph 
+
 ```{r}
 
 par(mfrow=c(2,2))
@@ -187,7 +189,35 @@ knitr::include_graphics("8_5.PNG")
 
 ```{r}
 
-switches <- read.csv("switches.csv", header=T, sep =";")
-head(switches)
+swt <- read.csv("swt.csv", header=T, sep =";")
+head(swt)
 
 ```
+
+```{r}
+
+knitr::include_graphics("8_51.PNG")
+
+```
+
+```{r}
+i <- order
+km.model <- survfit(Surv(swt$time,swt$A) ~ swt$B)
+plot(km.model)
+```
+
+
+```{r}
+
+####
+
+reg_exp <- survreg(Surv(swt$time,swt$A)~swt$B, dist = "exponential") 
+
+reg_weibull<<- survreg(Surv(swt$time,swt$A)~swt$B, dist = "weibull") 
+
+reg_lognormal <- survreg(Surv(swt$time,swt$A)~swt$B, dist = "lognormal") 
+
+```
+
+
+

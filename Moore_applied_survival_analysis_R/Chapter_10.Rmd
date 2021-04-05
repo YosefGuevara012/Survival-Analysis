@@ -289,7 +289,7 @@ lines(surv1.vec ~ tt.vec)
 age <- pharmacoSmoking$age
 employment <- pharmacoSmoking$employment
 model.pharm.coxph <- coxph(Surv(ttr, relapse) ~ grp + age + employment)
-summary(modelAll2.coxph)
+summary(model.pharm.coxph)
 ```
 We may include these covariates in a Weibull model
 as follows:
