@@ -148,17 +148,10 @@ $$0.1159-2\sqrt{\frac{0.1159\left(1-0.1159\right)}{69}}=0.0388$$
 knitr::include_graphics("4_3.PNG")
 
 ```
-The defitnion 4.6 says that the hazard plot is given by:
+### Calculation of the empirical and accumulative Hazard
 
-
-$$\left(\alpha _i,y_{\left(j\right)}\right)$$
-
-Where
-
-$$\alpha _j=\sum \:_{i=1}^j\left(\frac{1}{n-i+1}\right)$$
 ```{r}
 
-### Calculation of the empirical and accumulative Hazard
 
 k <- seq(69,1)
 Emp.h <- c()
@@ -200,14 +193,14 @@ harzard.score<- as.data.frame(cbind(Days,Cens, k, Emp.h, cum.H))
 head(harzard.score)
 ```
 
-
+### Building the Empirical harzard plot
 
 ```{r}
 
 ### Building the graph
 
 hz.plotting <- subset(harzard.score, Cens == 1)
-plot(hz.plotting$Days,hz.plotting$Emp.h, main="Hazard Plot", xlab = "Days since heart transplant", ylab = "Hazard plot score", col="red")
+plot(hz.plotting$Days,hz.plotting$Emp.h, main="Empirical Hazard Plot", xlab = "Days since heart transplant", ylab = "Hazard plot score", col="red")
 ```
 
 ```{r}
@@ -225,15 +218,7 @@ hz.plotting$cum.H[hz.plotting$Days == 994]
 ```
 
 
-Based on the calculations in the table above, we can say that the accumulated risk at 1000 days is 1.2918.
-
-knowing that
-
-$$H_{n\left(y\right)}=-ln\left(S_n\left(y\right)\right)$$
-
-We have that:
-
-$$ H_{69}\left(61\right)=-ln\left(0.0444\right)=3.1169$$
+Based on the calculations in the table above, we can say that the accumulated empirical hazard at 1000 days is 1.2918.
 
 
 ```{r}
@@ -241,13 +226,42 @@ $$ H_{69}\left(61\right)=-ln\left(0.0444\right)=3.1169$$
 knitr::include_graphics("4_3_2.PNG")
 
 ```
+### Calculations of lognormal probability distribution
+
 ```{r}
 
 inv_phi <- qnorm(newHeart$p)
 result.lm <- lm(inv_phi~log(newHeart$Days))
 
-plot(log(newHeart$Days),inv_phi, main = "Lognormal distribution for heart transplant",xlab="log(Days)", sub="log-normal",ylab=expression(Phi^-1 * (S(t))))
+plot(log(newHeart$Days),inv_phi, main = "Lognormal probability distribution for heart transplant",xlab="log(Days)", sub="log-normal",ylab=expression(Phi^-1 * (S(t))))
 abline(result.lm, col="red")
+
+result.lm
+```
+Using the graph as empirical evidence, it can be corroborated that the data are generated to fit a lognormal distribution( 2.4423 , -0.4948 ).
+
+### Accumulated hazard calculations
+
+Similarly, we can calculate the cumulative hazard for a log normal distribution as follows:
+
+```{r}
+Hexp <- 1-exp(-hz.plotting$cum.H)
+Hphi <- qnorm(Hexp)
+
+LogNomrh.lm <- lm(Hphi~log(hz.plotting$Days))
+
+plot(log(hz.plotting$Days),Hphi, main="Accumulated log−normal Hazard", ylab = "Accumulated log−normal Hazard", xlab="log(Days)", xlim=c(0,7), ylim=c(-2.2,1) )
+abline(LogNomrh.lm, col="red")
 
 ```
 
+
+```{r}
+
+knitr::include_graphics("4_4.PNG")
+
+```
+In our case the author has decided to use b = 0.5, as can be seen below:
+
+
+$$100\left(\frac{i-b}{n+1-2b}\right)=100\left(\frac{i-\frac{1}{2}}{n+1-2\left(\frac{1}{2}\right)}\right)=100\left(\frac{i-\frac{1}{2}}{n}\right)$$
