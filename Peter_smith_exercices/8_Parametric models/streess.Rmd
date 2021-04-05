@@ -1,0 +1,10 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+stress <- read.csv("fluid.csv", header=T, sep =";")
+head(stress)
+```
+

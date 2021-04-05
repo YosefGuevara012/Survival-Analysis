@@ -20,10 +20,21 @@ knitr::include_graphics("8_3.PNG")
 
 ```{r}
 
-fluid <- read.csv("fluid.csv", header=T, sep =";")
-head(fluid)
+voltages <- read.csv("voltages.csv", header=T, sep =";")
+head(voltages)
 
 ```
+
+```{r}
+
+### Data adjustment to eliminate NA values
+
+V30KV <- voltages$V30KV[1:11]
+V32KV <- voltages$V32KV[1:15]
+V34KV <- voltages$V34KV
+V36KV <- voltages$V36KV[1:15]
+```
+
 ### Diagnostic 1.
 
 Calculating plotting position for the 4 covariates 
@@ -32,23 +43,23 @@ Calculating plotting position for the 4 covariates
 
 ### Plotting positions Failure 30KV
 
-i <- seq(1:length(fluid$Failure_30KV))
-pFailure <- 1 - ((i-0.5)/length(i))
+i <- seq(1:length(V30KV))
+p30 <- 1 - ((i-0.5)/length(i))
 
 ### Plotting positions at_test 32KV
 
-i <- seq(1:length(fluid$at_test_32KV))
-pTest <- 1 - ((i-0.5)/length(i))
+i <- seq(1:length(V32KV))
+p32 <- 1 - ((i-0.5)/length(i))
 
 ### Plotting positions Voltage 34KV
 
-i <- seq(1:length(fluid$voltage_34KV))
-pVoltage <- 1 - ((i-0.5)/length(i))
+i <- seq(1:length(V34KV))
+p34 <- 1 - ((i-0.5)/length(i))
 
 ### Plotting positions levels 36KV
 
-i <- seq(1:length(fluid$levels_36KV))
-pLevels <- 1 - ((i-0.5)/length(i))
+i <- seq(1:length(V36KV))
+p36 <- 1 - ((i-0.5)/length(i))
 
 ```
 
@@ -57,12 +68,25 @@ pLevels <- 1 - ((i-0.5)/length(i))
 
 ### Plotting the data
 
-plot(log(fluid$at_test_32KV),pTest,col="red", pch = 19 , ylab= "Plotting position S(t)", xlab="Log covariates")
-points(log(fluid$voltage_34KV),pVoltage,col="green", pch = 19)
-points(log(fluid$Failure_30KV),pFailure,col="blue", pch = 19)
-points(log(fluid$levels_36KV),pLevels,col="orange", pch = 19)
-legend("bottomleft", legend=c("Test", "Voltage", "Failure", "Levels"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
+plot(log(V32KV),p32,col="red", pch = 19 , ylab= "Plotting position S(t)", xlab="Log (Faliure)",xlim=c(-2,6),ylim=c(0,1), main= "Empirical Survival Function for Diagnostic 1")
+points(log(V34KV),p34,col="green", pch = 19)
+points(log(V30KV),p30,col="blue", pch = 19)
+points(log(V36KV),p36,col="orange", pch = 19)
+legend("bottomleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
 ```
+
+### Diagnostic 2
+
+```{r}
+SD32 <- sd(log(V32KV))
+SD34 <- sd(log(V34KV))
+SD30 <- sd(log(V30KV))
+SD36 <- sd(log(V36KV))
+
+cbind(SD32, SD34, SD30, SD36)
+```
+
+
 ### Diagnostic 3 graph
 
 
@@ -71,12 +95,85 @@ legend("bottomleft", legend=c("Test", "Voltage", "Failure", "Levels"), col = c("
 
 ### Plotting the data
 
-plot(log(fluid$at_test_32KV),log(-1*log(pTest)),col="red", pch = 19 , ylab= "Log log Plotting position", xlab="Log covariates")
-points(log(fluid$voltage_34KV),log(-1*log(pVoltage)),col="green", pch = 19)
-points(log(fluid$Failure_30KV),log(-1*log(pFailure)),col="blue", pch = 19)
-points(log(fluid$levels_36KV),log(-1*log(pLevels)),col="orange", pch = 19)
-legend("topleft", legend=c("Test", "Voltage", "Failure", "Levels"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
+plot(log(V32KV),log(-1*log(p32)),col="red", pch = 19 , ylab= "Log log Plotting position", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-4,2), main = "Empirical Survival Function for Diagnostic 3 Proportional Hazard")
+points(log(V34KV),log(-1*log(p34)),col="green", pch = 19)
+points(log(V30KV),log(-1*log(p30)),col="blue", pch = 19)
+points(log(V36KV),log(-1*log(p36)),col="orange", pch = 19)
+legend("topleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
 
+```
+
+```{r}
+
+knitr::include_graphics("8_31.PNG")
+
+```
+
+```{r}
+### Kaplan Meier models for the different voltages
+
+km.model32 <- survfit(Surv(V32KV,rep(1,15))~1)
+km.model34 <- survfit(Surv(V34KV,rep(1,19))~1)
+km.model30 <- survfit(Surv(V30KV,rep(1,11))~1)
+km.model36 <- survfit(Surv(V36KV,rep(1,15))~1)
+
+```
+
+```{r}
+### Survival estimators and times for all the different voltages
+
+survEst32 <- km.model32$surv
+survTime32 <- km.model32$time
+
+survEst34 <- km.model34$surv
+survTime34 <- km.model34$time
+
+survEst30 <- km.model30$surv
+survTime30 <- km.model30$time
+
+survEst36 <- km.model36$surv
+survTime36 <- km.model36$time
+
+```
+
+
+```{r}
+
+### Fitting the models
+
+logLogSurvEst32 <- log(-log(survEst32[-15]))
+logSurvTime32 <- log(survTime32[-15])
+result.lm32 <- lm(logLogSurvEst32 ~ logSurvTime32)
+
+logLogSurvEst34 <- log(-log(survEst34[-19]))
+logSurvTime34 <- log(survTime34[-19])
+result.lm34 <- lm(logLogSurvEst34 ~ logSurvTime34)
+
+logLogSurvEst30 <- log(-log(survEst30[-11]))
+logSurvTime30 <- log(survTime30[-11])
+result.lm30 <- lm(logLogSurvEst30 ~ logSurvTime30)
+
+logLogSurvEst36 <- log(-log(survEst36[-15]))
+logSurvTime36 <- log(survTime36[-15])
+result.lm36 <- lm(logLogSurvEst36 ~ logSurvTime36)
+
+```
+
+```{r}
+
+par(mfrow=c(2,2))
+
+plot(logLogSurvEst32 ~ logSurvTime32, pch=16, xlab="log(Faliure)", sub="32KV",ylab="log(-log(S(t))")
+abline(result.lm32, col ="red")
+
+plot(logLogSurvEst34 ~ logSurvTime34, pch=16, xlab="log(Faliure)", sub="34KV",ylab="log(-log(S(t))")
+abline(result.lm34, col ="green")
+
+plot(logLogSurvEst30 ~ logSurvTime30, pch=16, xlab="log(Faliure)", sub="30KV",ylab="log(-log(S(t))")
+abline(result.lm30, col ="blue")
+
+plot(logLogSurvEst36 ~ logSurvTime36, pch=16, xlab="log(Faliure)", sub="36KV",ylab="log(-log(S(t))")
+abline(result.lm36, col ="orange")
 ```
 
 ```{r}
