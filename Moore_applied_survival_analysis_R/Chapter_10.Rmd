@@ -385,4 +385,3 @@ plot(resid.deviance ~ employment)
 title("Deviance residuals\nversus employment")
 
 ```
-

@@ -1,6 +1,6 @@
 ---
 title: "Chapter 8 Fitting parametric regression models"
-output: html_notebook
+output: word_document
 ---
 
 ```{r}
@@ -18,22 +18,30 @@ knitr::include_graphics("8_3.PNG")
 
 ### Required data
 
+The first thing we will do is clean the data load the data
+
 ```{r}
+
+### DataSet
 
 voltages <- read.csv("voltages.csv", header=T, sep =";")
 head(voltages)
 
 ```
+### Data adjustment to eliminate NA values
+
+Now we will adjust the data in independent sensors to facilitate their manipulation.
 
 ```{r}
 
-### Data adjustment to eliminate NA values
 
 V30KV <- voltages$V30KV[1:11]
 V32KV <- voltages$V32KV[1:15]
 V34KV <- voltages$V34KV
 V36KV <- voltages$V36KV[1:15]
 ```
+
+## Diagnostic tests
 
 ### Diagnostic 1.
 
@@ -64,6 +72,9 @@ p36 <- 1 - ((i-0.5)/length(i))
 ```
 
 ### Diagnostic 1 graph
+
+For the accelerated models we must calculate the empirical survival function, will show location shifted versions of the baseline survival function when an accelerated lifetimes model is appropriate.
+
 ```{r}
 
 ### Plotting the data
@@ -75,7 +86,11 @@ points(log(V36KV),p36,col="orange", pch = 19)
 legend("bottomleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
 ```
 
+Although the model presents curvatures, for some of its data they are not very pronounced, so they are not very far from the baseline, so it could be said that it is not an accelerated model.
+
 ### Diagnostic 2
+
+By means of the standard deviation, a stabilization is given to the constant variance as proposed by the loglinear model.
 
 ```{r}
 SD32 <- sd(log(V32KV))
@@ -89,17 +104,32 @@ cbind(SD32, SD34, SD30, SD36)
 
 ### Diagnostic 3 graph
 
-
+Verifying the plots of the proportional hazards, it can be seen that these data fit a straight line under the Weibull model, as proposed in the exercise, Although it could also fit a log-normal distribution.
 
 ```{r}
 
+
 ### Plotting the data
 
-plot(log(V32KV),log(-1*log(p32)),col="red", pch = 19 , ylab= "Log log Plotting position", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-4,2), main = "Empirical Survival Function for Diagnostic 3 Proportional Hazard")
+par(mfrow=c(1,3))
+
+plot(log(V32KV),log(-1*log(p32)),col="red", pch = 19 , ylab= "Log log Plotting position", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-4,2), main = "Diagnostic 3 Weibull")
 points(log(V34KV),log(-1*log(p34)),col="green", pch = 19)
 points(log(V30KV),log(-1*log(p30)),col="blue", pch = 19)
 points(log(V36KV),log(-1*log(p36)),col="orange", pch = 19)
 legend("topleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
+
+plot(log(V32KV),-1*log(p32),col="red", pch = 19 , ylab= "-log Plotting position", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(0,5), main = "Diagnostic 3 exponential")
+points(log(V34KV),-1*log(p34),col="green", pch = 19)
+points(log(V30KV),-1*log(p30),col="blue", pch = 19)
+points(log(V36KV),-1*log(p36),col="orange", pch = 19)
+legend("topleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
+
+plot(log(V32KV),qnorm(p32),col="red", pch = 19 , ylab= "LognormalS(t)", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-2.5,2), main = "Diagnostic 3 Lognormal")
+points(log(V34KV),qnorm(p34),col="green", pch = 19)
+points(log(V30KV),qnorm(p30),col="blue", pch = 19)
+points(log(V36KV),qnorm(p36),col="orange", pch = 19)
+legend("bottomleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
 
 ```
 
@@ -108,6 +138,9 @@ legend("topleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green
 knitr::include_graphics("8_31.PNG")
 
 ```
+Next, we will compare the survival function with the Kaplan-Meier estimator model proposed by the task.
+
+### Applying KM estimator
 
 ```{r}
 ### Kaplan Meier models for the different voltages
@@ -118,6 +151,8 @@ km.model30 <- survfit(Surv(V30KV,rep(1,11))~1)
 km.model36 <- survfit(Surv(V36KV,rep(1,15))~1)
 
 ```
+
+Survival and times are taken for each model such that:
 
 ```{r}
 ### Survival estimators and times for all the different voltages
@@ -136,6 +171,9 @@ survTime36 <- km.model36$time
 
 ```
 
+### Model fitting
+
+With the above values we fit each model for each covariate:
 
 ```{r}
 
@@ -160,6 +198,9 @@ result.lm36 <- lm(logLogSurvEst36 ~ logSurvTime36)
 ```
 
 ### Weibull model fitting graph 
+
+
+Finally fitting the model for all the covariates we can see how the line through them fits almost all the points and with a minimum distance between them and the regression line, so that we can fit the Weibull model as proposed in the exercise to these data.
 
 ```{r}
 
@@ -187,9 +228,12 @@ knitr::include_graphics("8_5.PNG")
 
 ### Required data
 
+
+The first thing we will do is clean the data load the data
+
 ```{r}
 
-swt <- read.csv("swt.csv", header=T, sep =";")
+swt <- read.csv("switches.csv", header=T, sep =";")
 head(swt)
 
 ```
@@ -200,24 +244,90 @@ knitr::include_graphics("8_51.PNG")
 
 ```
 
-```{r}
-i <- order
-km.model <- survfit(Surv(swt$time,swt$A) ~ swt$B)
-plot(km.model)
-```
-
+The data were adjusted to independent vectors in order to work better with them, an auxiliary variable has been generated to separate both groups of switches.
 
 ```{r}
-
-####
-
-reg_exp <- survreg(Surv(swt$time,swt$A)~swt$B, dist = "exponential") 
-
-reg_weibull<<- survreg(Surv(swt$time,swt$A)~swt$B, dist = "weibull") 
-
-reg_lognormal <- survreg(Surv(swt$time,swt$A)~swt$B, dist = "lognormal") 
+GA <- subset(swt, Group == "A")
+GB <- subset(swt, Group == "B")
 
 ```
 
+### Plotting position Calculations
 
+```{r}
+
+j <- seq(1,length(GA$time))
+pA <- 1 - ((j-0.5)/length(GA$time))
+
+j <- seq(1,length(GB$time))
+pB <- 1 - ((j-0.5)/length(GB$time))
+
+inv_phiA <- qnorm(pA)
+inv_phiB <- qnorm(pB)
+
+```
+
+### Diagnostic 1 graph
+
+For the accelerated models we must calculate the empirical survival function, will show location shifted versions of the baseline survival function when an accelerated lifetimes model is appropriate.
+
+```{r}
+plot(log(GA$time),pA, main="S(t) Life Times of Mechanical Devices log-linear Model", ylab="S(t)", xlab="Log(Millions of cycles to faliure)", col ="red",pch = 19)
+points(log(GB$time), pB, col ="blue", pch = 19)
+legend("bottomleft", legend=c("Group A", "Group B"), col = c("red","blue"), pch = 19, bty = "n")
+
+```
+### Diagnostic 3 graph
+
+Data are projected to find a better model to fit the data
+
+```{r} 
+
+par(mfrow=c(1,3))
+
+plot(log(GA$time), -log(pA), pch=16, xlab="log(Faliure)", sub="Exponencial",ylab="-log(S(t))", col ="red")
+points(log(GB$time), -log(pB),pch=16, col="blue")
+
+plot(log(GA$time), log(-log(pA)), pch=16, xlab="log(Faliure)", sub="Weibull",ylab="-log(S(t))", col ="red")
+points(log(GB$time), log(-log(pB)),pch=16, col="blue")
+
+plot(log(GA$time), inv_phiA, pch=16, xlab="log(Faliure)", sub="LogNormal",ylab= expression(Phi^-1 * (S(t))), col ="red")
+points(log(GB$time), inv_phiB,pch=16, col="blue")
+
+```
+
+It can be seen that it is the Weibull model, so we proceed to calculate its regressor data
+
+### Regression calculation
+
+```{r}
+
+reg_weibullA<-survreg(Surv(GA$time, GA$A)~1, dist='weibull')
+
+reg_weibullB<-survreg(Surv(GB$time, GB$B)~1, dist='weibull')
+
+```
+
+### Extraction of residuals
+
+We extract the residuals to visualize the differences between the generated model and the actual model value of S(t).
+
+```{r}
+
+resid.devianceA <- residuals(reg_weibullA, type="deviance")
+resid.devianceB <- residuals(reg_weibullB, type="deviance")
+
+```
+
+### Visualization of residuals
+
+The residuals are extracted and the quartiles are calculated. As requested in the assignment
+
+```{r}
+par(mfrow=c(1,2))
+boxplot(resid.devianceA, col ="red")
+title("Deviance residuals\nversus Group A", cex.main = 0.7, xlab ="Group A")
+boxplot(resid.devianceB, col ="blue")
+title("Deviance residuals\nversus Group B", cex.main = 0.7, xlab ="Group B")
+```
 

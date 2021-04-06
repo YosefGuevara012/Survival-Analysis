@@ -1,6 +1,6 @@
 ---
 title: "Chapter 6. Product Limit stimator Peter smith"
-output: html_notebook
+output: word_document
 ---
 
 ### Required libraries
