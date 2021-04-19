@@ -9,9 +9,72 @@ output: html_notebook
 
 
 ```{r}
-
-heart <- read.csv("heart_data.csv", header = T, sep =";")
-head(heart)
+library("survival")
+data(stanford2)
+head(stanford2)
 
 ```
 
+
+```{r}
+
+heart <- subset(stanford2, t5 != "NA")
+Over40 <- ifelse(heart$age > 40,1,0)
+heart <- cbind(heart, Over40)
+heart$Over40 <- as.factor(heart$Over40)
+
+```
+
+
+```{r}
+len <- length(heart$t5)
+
+misMatchLevel <- rep(0,len)
+
+for (i in 1:len){
+  
+  if (heart$t5[i] > max(heart$t5)/3*2){
+    
+    misMatchLevel[i] <- 2
+    
+  }else if(heart$t5[i] > max(heart$t5)/3) {
+    
+    misMatchLevel[i] <- 1
+  }
+  
+}
+
+heart <- cbind(heart, misMatchLevel)
+
+heart$misMatchLevel <- as.factor(heart$misMatchLevel)
+
+```
+
+
+```{r}
+summary(heart)
+```
+```{r}
+
+
+cox.mod <- coxph(Surv(heart$time, heart$status)~heart$Over40 + heart$misMatchLevel)
+summary(cox.mod)
+```
+At a given instant in time, someone who is over 40 is 1.7249 time as as likely to die as someone who is under 40 adjusting for mismatch level
+
+
+At a given instant in time, someone who is over 40 is 72.49 % time as as likely to die as someone who is under 40 adjusting for mismatch level
+
+```{r}
+cox.mod2 <- coxph(Surv(heart$time, heart$status)~ heart$Over40)
+```
+
+
+```{r}
+anova(cox.mod2, cox.mod, test = "LRT")
+```
+```{r}
+cox.num <- coxph(Surv(heart$time, heart$status)~ heart$age +heart$t5)
+summary(cox.num)
+```
+at a given instant in time, the probability of dying for someone who is 1 year older is 3% higher than someone who is 1 year younger adjusting for t5 score
