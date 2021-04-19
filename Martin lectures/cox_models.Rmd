@@ -1,0 +1,17 @@
+---
+title: "COX PH models- Concepts and implementation"
+output: html_notebook
+---
+
+
+
+### Reading the data
+
+
+```{r}
+
+heart <- read.csv("heart_data.csv", header = T, sep =";")
+head(heart)
+
+```
+
