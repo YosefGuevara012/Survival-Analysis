@@ -1,0 +1,54 @@
+---
+title: "R Notebook"
+output: word_document
+---
+
+```{r}
+
+knitr::include_graphics("MVR1.PNG")
+
+```
+
+```{r}
+knitr::include_graphics("data.PNG")
+```
+
+
+
+```{r}
+time <- c(1,1,2,2,3,4,4,5,5,8,8,8,8,11,11,12,12,15,17,22,23)
+rep <- c(1,2,3,4,5,8,11,12,15,17,22,23)
+```
+
+```{r}
+knitr::include_graphics("MVR2.PNG")
+```
+Valores no repetidos
+
+```{r}
+
+St <- c()
+for ( i in 1:length(rep)){
+  
+  St[i] <- sum(time > rep[i])
+  
+}
+
+St <- St/21
+
+plot(rep,St)
+```
+
+entonces
+
+```{r}
+
+knitr::include_graphics("MVR1.PNG")
+
+```
+
+```{r}
+rt0 <- sum(St[-1])/St[1]
+rt0
+```
+

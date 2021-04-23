@@ -1,0 +1,40 @@
+---
+title: "Survival times of prostatic cancer"
+output: html_notebook
+---
+
+```{r}
+prostatic <- read.csv("prostatic.csv", header = T, sep=",")
+attach(prostatic);
+head(prostatic)
+```
+
+```{r}
+index <- order(time)
+prostatic <- prostatic[index,]
+```
+
+
+```{r}
+len <- length(prostatic[,1])
+patient <- seq(1:len)
+prostatic <- cbind(prostatic, patient)
+```
+
+
+
+```{r}
+p_score <- 1 - (patient-0.5)/len
+prostatic <- cbind(prostatic, p_score)
+head(prostatic)
+attach(prostatic);
+
+```
+
+
+```{r}
+plot(time,p_score)
+
+```
+
+
