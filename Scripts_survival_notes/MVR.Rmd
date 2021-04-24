@@ -9,6 +9,8 @@ knitr::include_graphics("MVR1.PNG")
 
 ```
 
+
+
 ```{r}
 knitr::include_graphics("data.PNG")
 ```
@@ -50,5 +52,23 @@ knitr::include_graphics("MVR1.PNG")
 ```{r}
 rt0 <- sum(St[-1])/St[1]
 rt0
+```
+Mean residual time at age t
+
+```{r}
+knitr::include_graphics("MVR3.PNG")
+```
+
+
+```{r}
+rt <- c()
+
+
+for ( i in 1:12){
+  
+  rt[i] <- sum(St[-1:-i])/St[i]
+  
+}
+rt
 ```
 
