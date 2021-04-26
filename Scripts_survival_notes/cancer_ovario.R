@@ -1,7 +1,7 @@
 
 # Lectura de los datos de cancer de ovarios
 
-can_ovario <- read.csv("cancer_ovario.csv", header=T, sep=";")
+can_ovario <- read.csv("stress.csv", header=T, sep=";")
 attach(can_ovario)
 
 # Cargar los paquetes survival y muhaz
