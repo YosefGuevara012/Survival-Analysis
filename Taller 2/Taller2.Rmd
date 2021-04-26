@@ -8,9 +8,6 @@ prostatic <- read.csv("prostatic.csv", header = T, sep=",")
 attach(prostatic);
 head(prostatic)
 ```
-```{r}
-summary(treatment1$time)
-```
 
 ```{r}
 par(mfrow=c(1,2))
