@@ -89,7 +89,11 @@ When P chi is too high adding a coovarible is not statistically significant
 cox.num <- coxph(Surv(heart$time, heart$status)~ heart$age +heart$t5)
 summary(cox.num)
 ```
-At a given instant in time, the probability of dying for someone who is 1 year older is 3% higher than someone who is 1 year younger adjusting for t5 score
+EL Hazard Ratio para la edad es de 1.030 con IC (1.007, 1.053)
+EL Hazard Ratio para la edad es de 1.186 con IC (0.828, 1.698)
+
+
+En un instante determinado, la probabilidad de morir de alguien que tiene 1 año más de edad es un 3% mayor que la de alguien que tiene 1 año menos, ajustándose a la puntuación t5
 
 
 ### Checking the COX PH assumptions

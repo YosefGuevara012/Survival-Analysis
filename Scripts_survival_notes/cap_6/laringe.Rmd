@@ -1,0 +1,95 @@
+---
+title: "Laringe"
+output: html_notebook
+---
+
+```{r}
+
+require(survival)
+require(MASS)
+
+```
+
+
+```{r}
+laringe <- read.csv("laringe.csv", header = T, sep =",")
+attach(laringe)
+head(laringe)
+```
+
+la expresion cox lar1 corresponde al modelo de Cox sin covariables
+(modelo nulo), el codigo R para hacer los calculos de estimacion es el siguiente.
+
+```{r}
+
+
+cox_lar1<-coxph(Surv(tpo,cens)~factor(est),data=laringe,x=T, method="breslow")
+summary(cox_lar1)
+
+cox_lar1$loglik
+```
+El nombre cox lar2 corresponde al modelo de Cox con la covariable estadio
+(est), la cual se considera como un factor con cuatro niveles; para este factor
+se crean tres variables cticias guiados por la tabla (6.1).
+
+```{r}
+cox_lar2<-coxph(Surv(tpo,cens)~factor(est),data=laringe,x=T, method="breslow")
+summary(cox_lar2)
+cox_lar2$loglik
+```
+Al modelo de Cox anterior se le adiciona la variable edad, es denominado
+cox lar3.
+
+```{r}
+cox_lar3<-coxph(Surv(tpo,cens)~factor(est)+edad,data=laringe, x=T,method="breslow")
+summary(cox_lar3)
+cox_lar3$loglik
+```
+Finalmente, el modelo de Cox que incluye estadio, edad y la interaccion
+estadio y edad es nominado como cox lar4,
+
+
+```{r}
+cox_lar4<-coxph(Surv(tpo,cens)~factor(est)+edad+
++factor(est)*edad,data=laringe,x=T,method="breslow")
+summary(cox_lar4)
+cox_lar4$loglik
+```
+Se hace el analisis de residuales
+para los modelos de Cox con y sin interaccion y desde este analisis se debe
+decidir sobre cual de los dos modelos se ajusta mas adecuadamente a los
+datos.
+Los residuos escalados de Schoenfeld para el modelo de Cox con interacci
+on se obtienen mediante el codigo R como se muestra a continuacion.
+
+```{r}
+residuals(cox_lar4,type="scaledsch")
+cox.zph(cox_lar4,transform="identity") ## g(t)=t
+par(mfrow=c(2,4))
+plot(cox.zph(cox_lar4))
+```
+```{r}
+H<-basehaz(cox_lar4,centered=F)
+tpos<-H$time
+H0<-H$hazard
+S0<-exp(-H0)
+round(cbind(tpos,S0,H0),digits=5)
+```
+```{r}
+par(mfrow=c(1,2))
+# GRAFICAS DE SOBREVIDA 50 A~NOS
+plot(tpos,S0^(exp(-0.002559*50)),ylim=c(0,1),type="l",xlab="Tiempo",ylab="S(t|x)")
+lines(tpos,S0^(exp(-7.946142+(-0.002559+0.120254)*50)), lty=2)
+lines(tpos,S0^(exp(-0.122500+(-0.002559+0.011351)*50)), lty=3)
+lines(tpos,S0^(exp(0.846986+(-0.002559+0.013673)*50)), lty=4)
+# GRAFICAS DE SOBREVIDA 65 A~NOS
+plot(tpos,S0^(exp(-0.002559*65)),ylim=c(0,1),type="l",xlab="Tiempo",ylab="S(t|x)")
+lines(tpos,S0^(exp(-7.946142+(-0.002559+0.120254)*65)), lty=2)
+lines(tpos,S0^(exp(-0.122500+(-0.002559+0.011351)*65)), lty=3)
+lines(tpos,S0^(exp(0.846986+(-0.002559+0.013673)*65)), lty=4)
+```
+
+```{r}
+S0^(exp(-7.946142+(-0.002559+0.120254)*65))
+```
+

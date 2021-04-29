@@ -49,4 +49,26 @@ points(log(S4),ploglog,col="orange", pch = 19)
 legend("topleft", legend=c("S1", "S2", "S3", "S4"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
 
 ```
+```{r}
+stress <- read.csv("stress_col.csv", header=T, sep =",")
+attach(stress)
+head(stress)
+```
+```{r}
+km.model <- survfit(Surv(time,rep(1,length(time)))~ as.factor(level))
+km.model
+```
+
+```{r}
+plot(km.model)
+```
+```{r}
+
+logtime <- log(km.model$time)
+logSurv <- -log(km.model$surv)
+lm.model <- lm(logSurv~logtime)
+```
+```{r}
+plot(logSurv, logtime)
+```
 
