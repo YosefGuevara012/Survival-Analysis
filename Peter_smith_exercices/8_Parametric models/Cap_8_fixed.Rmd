@@ -1,402 +1,102 @@
 ---
-title: "Chapter 8 Fitting parametric regression models"
+title: "R Notebook"
 output: word_document
 ---
 
 ```{r}
-
 library(survival)
-
 ```
 
-
 ```{r}
-
 knitr::include_graphics("8_3.PNG")
-
 ```
-
-### Required data
-
-The first thing we will do is clean the data load the data
-
 ```{r}
-
-### DataSet
-
-voltages <- read.csv("voltages.csv", header=T, sep =";")
-head(voltages)
-
-```
-### Data adjustment to eliminate NA values
-
-Now we will adjust the data in independent sensors to facilitate their manipulation.
-
-```{r}
-
-
-V30KV <- voltages$V30KV[1:11]
-V32KV <- voltages$V32KV[1:15]
-V34KV <- voltages$V34KV
-V36KV <- voltages$V36KV[1:15]
-```
-
-## Diagnostic tests
-
-### Diagnostic 1.
-
-Calculating plotting position for the 4 covariates 
-
-```{r}
-
-### Plotting positions Failure 30KV
-
-i <- seq(1:length(V30KV))
-p30 <- 1 - ((i-0.5)/length(i))
-
-### Plotting positions at_test 32KV
-
-i <- seq(1:length(V32KV))
-p32 <- 1 - ((i-0.5)/length(i))
-
-### Plotting positions Voltage 34KV
-
-i <- seq(1:length(V34KV))
-p34 <- 1 - ((i-0.5)/length(i))
-
-### Plotting positions levels 36KV
-
-i <- seq(1:length(V36KV))
-p36 <- 1 - ((i-0.5)/length(i))
-
-```
-
-### Diagnostic 1 graph
-
-For the accelerated models we must calculate the empirical survival function, will show location shifted versions of the baseline survival function when an accelerated lifetimes model is appropriate.
-
-```{r}
-
-### Plotting the data
-
-plot(log(V32KV),p32,col="red", pch = 19 , ylab= "Plotting position S(t)", xlab="Log (Faliure)",xlim=c(-2,6),ylim=c(0,1), main= "Empirical Survival Function for Diagnostic 1")
-points(log(V34KV),p34,col="green", pch = 19)
-points(log(V30KV),p30,col="blue", pch = 19)
-points(log(V36KV),p36,col="orange", pch = 19)
-legend("bottomleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
-```
-
-Although the model presents curvatures, for some of its data they are not very pronounced, so they are not very far from the baseline, so it could be said that it is not an accelerated model.
-
-### Diagnostic 2
-
-By means of the standard deviation, a stabilization is given to the constant variance as proposed by the loglinear model.
-
-```{r}
-SD32 <- sd(log(V32KV))
-SD34 <- sd(log(V34KV))
-SD30 <- sd(log(V30KV))
-SD36 <- sd(log(V36KV))
-
-cbind(SD32, SD34, SD30, SD36)
-```
-
-
-### Diagnostic 3 graph
-
-Verifying the plots of the proportional hazards, it can be seen that these data fit a straight line under the Weibull model, as proposed in the exercise, Although it could also fit a log-normal distribution.
-
-```{r}
-
-
-### Plotting the data
-
-par(mfrow=c(1,3))
-
-plot(log(V32KV),log(-1*log(p32)),col="red", pch = 19 , ylab= "Log log Plotting position", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-4,2), main = "Diagnostic 3 Weibull")
-points(log(V34KV),log(-1*log(p34)),col="green", pch = 19)
-points(log(V30KV),log(-1*log(p30)),col="blue", pch = 19)
-points(log(V36KV),log(-1*log(p36)),col="orange", pch = 19)
-legend("topleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
-
-plot(log(V32KV),-1*log(p32),col="red", pch = 19 , ylab= "-log Plotting position", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(0,5), main = "Diagnostic 3 exponential")
-points(log(V34KV),-1*log(p34),col="green", pch = 19)
-points(log(V30KV),-1*log(p30),col="blue", pch = 19)
-points(log(V36KV),-1*log(p36),col="orange", pch = 19)
-legend("topleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
-
-plot(log(V32KV),qnorm(p32),col="red", pch = 19 , ylab= "LognormalS(t)", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-2.5,2), main = "Diagnostic 3 Lognormal")
-points(log(V34KV),qnorm(p34),col="green", pch = 19)
-points(log(V30KV),qnorm(p30),col="blue", pch = 19)
-points(log(V36KV),qnorm(p36),col="orange", pch = 19)
-legend("bottomleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
-
+voltages <- read.csv("voltages.csv", header = T, sep = ",")
+str(voltages)
 ```
 
 ```{r}
-
 knitr::include_graphics("8_31.PNG")
-
 ```
-Next, we will compare the survival function with the Kaplan-Meier estimator model proposed by the task.
-
-### Applying KM estimator
 
 ```{r}
-### Kaplan Meier models for the different voltages
-
-km.model32 <- survfit(Surv(V32KV,rep(1,15))~1)
-km.model34 <- survfit(Surv(V34KV,rep(1,19))~1)
-km.model30 <- survfit(Surv(V30KV,rep(1,11))~1)
-km.model36 <- survfit(Surv(V36KV,rep(1,15))~1)
-
+voltages$KV <- as.factor(voltages$K)
+km.voltages <- survfit(Surv(time,cens)~KV, data=voltages)
+summary(km.voltages)
 ```
-
-Survival and times are taken for each model such that:
-
-```{r}
-### Survival estimators and times for all the different voltages
-
-survEst32 <- km.model32$surv
-survTime32 <- km.model32$time
-
-survEst34 <- km.model34$surv
-survTime34 <- km.model34$time
-
-survEst30 <- km.model30$surv
-survTime30 <- km.model30$time
-
-survEst36 <- km.model36$surv
-survTime36 <- km.model36$time
-
-```
-
-### Model fitting
-
-With the above values we fit each model for each covariate:
 
 ```{r}
 
-### Fitting the models
+plot(km.voltages, conf.int=F,col=c("red", "blue", "green", "orange"), xlab = "Time to breakdown", ylab = "S(t)", main="Comparing the survival time for the Group of Voltages", mark.time = TRUE, lwd = 2, las=1)
+legend("topright", legend=c("32KV","30KV","34KV","36KV"), lty = 1, lwd = 2, col=c("blue", "red", "green", "orange"), bty="n")
+```
+```{r}
+St <- km.voltages$surv
+logtime <- log(km.voltages$time)
+weibull <- log(-log(St))
+exponential <- -log(St)
+lognormal <- qnorm(St)
 
-logLogSurvEst32 <- log(-log(survEst32[-15]))
-logSurvTime32 <- log(survTime32[-15])
-result.lm32 <- lm(logLogSurvEst32 ~ logSurvTime32)
+voltages <- cbind(voltages,St,logtime,weibull,exponential,lognormal)
+```
 
-logLogSurvEst34 <- log(-log(survEst34[-19]))
-logSurvTime34 <- log(survTime34[-19])
-result.lm34 <- lm(logLogSurvEst34 ~ logSurvTime34)
 
-logLogSurvEst30 <- log(-log(survEst30[-11]))
-logSurvTime30 <- log(survTime30[-11])
-result.lm30 <- lm(logLogSurvEst30 ~ logSurvTime30)
+```{r}
 
-logLogSurvEst36 <- log(-log(survEst36[-15]))
-logSurvTime36 <- log(survTime36[-15])
-result.lm36 <- lm(logLogSurvEst36 ~ logSurvTime36)
+par(mfrow = c(1,3))
+
+### Weibull
+plot(logtime[1:10],weibull[1:10],col="red", pch = 19 , ylab= "Weibull position", xlab="Log(Faliure time)", xlim=c(-2,6), ylim= c(-3,1.5), main = "Weibull")
+points(logtime[12:25],weibull[12:25],col="blue", pch = 19)
+points(logtime[27:44],weibull[27:44],col="green", pch = 19)
+points(logtime[46:59],weibull[46:59],col="orange", pch = 19)
+legend("bottomright", legend=c("30KV", "32KV", "34KV", "36KV"), col = c("red","blue","green","orange"), pch = 19, bty = "n")
+
+### Exponential
+plot(logtime[1:10],exponential[1:10],col="red", pch = 19 , ylab= "Exponential position", xlab="Log(Faliure time)", xlim=c(-2,6), ylim= c(0,3.2), main = "Exponential")
+points(logtime[12:25],exponential[12:25],col="blue", pch = 19)
+points(logtime[27:44],exponential[27:44],col="green", pch = 19)
+points(logtime[46:59],exponential[46:59],col="orange", pch = 19)
+legend("topleft", legend=c("30KV", "32KV", "34KV", "36KV"), col = c("red","blue","green","orange"), pch = 19, bty = "n")
+
+### lognormal
+plot(logtime[1:10],lognormal[1:10],col="red", pch = 19 , ylab= "lognormal position", xlab="Log(Faliure time)", xlim=c(-2,6), ylim= c(-1.8,2), main = "Lognormal")
+points(logtime[12:25],lognormal[12:25],col="blue", pch = 19)
+points(logtime[27:44],lognormal[27:44],col="green", pch = 19)
+points(logtime[46:59],lognormal[46:59],col="orange", pch = 19)
+legend("bottomleft", legend=c("30KV", "32KV", "34KV", "36KV"), col = c("red","blue","green","orange"), pch = 19, bty = "n")
 
 ```
 
-### Weibull model fitting graph 
-
-
-Finally fitting the model for all the covariates we can see how the line through them fits almost all the points and with a minimum distance between them and the regression line, so that we can fit the Weibull model as proposed in the exercise to these data.
-
 ```{r}
+
+lm30 <- lm(weibull[1:10] ~ logtime[1:10])
+lm32 <- lm(weibull[12:25] ~ logtime[12:25])
+lm34 <- lm(weibull[27:44] ~ logtime[27:44])
+lm36 <- lm(weibull[46:59] ~ logtime[46:59])
 
 par(mfrow=c(2,2))
 
-plot(logLogSurvEst32 ~ logSurvTime32, pch=16, xlab="log(Faliure)", sub="32KV",ylab="log(-log(S(t))")
-abline(result.lm32, col ="red")
+plot(weibull[1:10] ~ logtime[1:10], pch=16, xlab="log(Faliure time)", sub="30KV",ylab="log(-log(S(t))")
+abline(lm30, col ="red")
 
-plot(logLogSurvEst34 ~ logSurvTime34, pch=16, xlab="log(Faliure)", sub="34KV",ylab="log(-log(S(t))")
-abline(result.lm34, col ="green")
+plot(weibull[12:25] ~ logtime[12:25], pch=16, xlab="log(Faliure time)", sub="32KV",ylab="log(-log(S(t))")
+abline(lm32, col ="blue")
 
-plot(logLogSurvEst30 ~ logSurvTime30, pch=16, xlab="log(Faliure)", sub="30KV",ylab="log(-log(S(t))")
-abline(result.lm30, col ="blue")
+plot(weibull[27:44] ~ logtime[27:44], pch=16, xlab="log(Faliure time)", sub="34KV",ylab="log(-log(S(t))")
+abline(lm34, col ="green")
 
-plot(logLogSurvEst36 ~ logSurvTime36, pch=16, xlab="log(Faliure)", sub="36KV",ylab="log(-log(S(t))")
-abline(result.lm36, col ="orange")
-```
-
-```{r}
-
-knitr::include_graphics("8_5.PNG")
-
-```
-
-
-### Required data
-
-
-The first thing we will do is clean the data load the data
-
-```{r}
-
-swt <- read.csv("switches.csv", header=T, sep =";")
-head(swt)
+plot(weibull[46:59] ~ logtime[46:59], pch=16, xlab="log(Faliure time)", sub="36KV",ylab="log(-log(S(t))")
+abline(lm36, col ="orange")
 
 ```
 
 ```{r}
-
-knitr::include_graphics("8_51.PNG")
-
-```
-
-The data were adjusted to independent vectors in order to work better with them, an auxiliary variable has been generated to separate both groups of switches.
-
-```{r}
-GA <- subset(swt, Group == "A")
-GB <- subset(swt, Group == "B")
-
-```
-
-### Plotting position Calculations
-
-```{r}
-
-j <- seq(1,length(GA$time))
-pA <- 1 - ((j-0.5)/length(GA$time))
-
-j <- seq(1,length(GB$time))
-pB <- 1 - ((j-0.5)/length(GB$time))
-
-inv_phiA <- qnorm(pA)
-inv_phiB <- qnorm(pB)
-
-```
-
-### Diagnostic 1 graph
-
-For the accelerated models we must calculate the empirical survival function, will show location shifted versions of the baseline survival function when an accelerated lifetimes model is appropriate.
-
-```{r}
-plot(log(GA$time),pA, main="S(t) Life Times of Mechanical Devices log-linear Model", ylab="S(t)", xlab="Log(Millions of cycles to faliure)", col ="red",pch = 19)
-points(log(GB$time), pB, col ="blue", pch = 19)
-legend("bottomleft", legend=c("Group A", "Group B"), col = c("red","blue"), pch = 19, bty = "n")
-
-```
-### Diagnostic 3 graph
-
-Data are projected to find a better model to fit the data
-
-```{r} 
-
-par(mfrow=c(1,3))
-
-plot(log(GA$time), -log(pA), pch=16, xlab="log(Faliure)", sub="Exponencial",ylab="-log(S(t))", col ="red")
-points(log(GB$time), -log(pB),pch=16, col="blue")
-
-plot(log(GA$time), log(-log(pA)), pch=16, xlab="log(Faliure)", sub="Weibull",ylab="-log(S(t))", col ="red")
-points(log(GB$time), log(-log(pB)),pch=16, col="blue")
-
-plot(log(GA$time), inv_phiA, pch=16, xlab="log(Faliure)", sub="LogNormal",ylab= expression(Phi^-1 * (S(t))), col ="red")
-points(log(GB$time), inv_phiB,pch=16, col="blue")
-
-```
-
-It can be seen that it is the Weibull model, so we proceed to calculate its regressor data
-
-### Regression calculation
-
-```{r}
-
-reg_weibullA<-survreg(Surv(GA$time, GA$A)~1, dist='weibull')
-
-reg_weibullB<-survreg(Surv(GB$time, GB$B)~1, dist='weibull')
-
-```
-
-### Extraction of residuals
-
-We extract the residuals to visualize the differences between the generated model and the actual model value of S(t).
-
-```{r}
-
-resid.devianceA <- residuals(reg_weibullA, type="deviance")
-resid.devianceB <- residuals(reg_weibullB, type="deviance")
-
-```
-
-### Visualization of residuals
-
-The residuals are extracted and the quartiles are calculated. As requested in the assignment
-
-```{r}
-par(mfrow=c(1,2))
-boxplot(resid.devianceA, col ="red")
-title("Deviance residuals\nversus Group A", cex.main = 0.7, xlab ="Group A")
-boxplot(resid.devianceB, col ="blue")
-title("Deviance residuals\nversus Group B", cex.main = 0.7, xlab ="Group B")
-```
-
-```{r}
-
 knitr::include_graphics("814.PNG")
-
-```
-
-```{r}
-
-par(mfrow=c(1,3))
-
-### weibull
-plot(logLogSurvEst32 ~ logSurvTime32, pch=16, xlab="log(Faliure)", sub="32KV",ylab="log(-log(S(t))", col ="red")
-abline(result.lm32, col ="red")
-points(logLogSurvEst34 ~ logSurvTime34, pch=16, xlab="log(Faliure)", sub="34KV",ylab="log(-log(S(t))", col ="green")
-abline(result.lm34, col ="green")
-points(logLogSurvEst30 ~ logSurvTime30, pch=16, xlab="log(Faliure)", sub="30KV",ylab="log(-log(S(t))", col ="blue")
-abline(result.lm30, col ="blue")
-points(logLogSurvEst36 ~ logSurvTime36, pch=16, xlab="log(Faliure)", sub="36KV",ylab="log(-log(S(t))",col ="orange")
-abline(result.lm36, col ="orange")
-
-### weibull
-plot(logLogSurvEst32 ~ logSurvTime32, pch=16, xlab="log(Faliure)", sub="32KV",ylab="log(-log(S(t))", col ="red")
-abline(result.lm32, col ="red")
-points(logLogSurvEst34 ~ logSurvTime34, pch=16, xlab="log(Faliure)", sub="34KV",ylab="log(-log(S(t))", col ="green")
-abline(result.lm34, col ="green")
-points(logLogSurvEst30 ~ logSurvTime30, pch=16, xlab="log(Faliure)", sub="30KV",ylab="log(-log(S(t))", col ="blue")
-abline(result.lm30, col ="blue")
-points(logLogSurvEst36 ~ logSurvTime36, pch=16, xlab="log(Faliure)", sub="36KV",ylab="log(-log(S(t))",col ="orange")
-abline(result.lm36, col ="orange")
-```
-```{r}
-
-
-### Plotting the data
-
-par(mfrow=c(1,2))
-
-plot(log(V32KV),log(-1*log(p32)),col="red", pch = 19 , ylab= "Log log Plotting position", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-4,2), main = "Diagnostic 3 Weibull")
-abline(result.lm32, col ="red")
-points(log(V34KV),log(-1*log(p34)),col="green", pch = 19)
-abline(result.lm34, col ="green")
-points(log(V30KV),log(-1*log(p30)),col="blue", pch = 19)
-abline(result.lm30, col ="blue")
-points(log(V36KV),log(-1*log(p36)),col="orange", pch = 19)
-abline(result.lm36, col ="orange")
-legend("topleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
-
-plot(log(V32KV),qnorm(p32),col="red", pch = 19 , ylab= "LognormalS(t)", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-2.5,2), main = "Diagnostic 3 Lognormal")
-abline(lm(log(V32KV)~qnorm(p32)), col ="red")
-
-points(log(V34KV),qnorm(p34),col="green", pch = 19)
-points(log(V30KV),qnorm(p30),col="blue", pch = 19)
-points(log(V36KV),qnorm(p36),col="orange", pch = 19)
-legend("bottomleft", legend=c("32KV", "34KV", "30KV", "36KV"), col = c("red","green","blue","orange"), pch = 19, bty = "n")
-
 ```
 
 
 ```{r}
-
-ploting.rl <- lm(log(-1*log(p32))~log(V32KV))
-plot(log(survTime32),log(-1*log(survEst32)),col="red", pch = 19 , ylab= "Log log Plotting position", xlab="Log(Faliures)", xlim=c(-2,6), ylim= c(-4,2), main = "Diagnostic 3 Weibull")
-abline(result.lm32,col="red")
-
-points(log(V32KV),log(-1*log(p32)),col="blue", pch = 19)
-abline(ploting.rl, col ="blue")
-
+loglogistic <- survreg(Surv(voltages$time))
 ```
 

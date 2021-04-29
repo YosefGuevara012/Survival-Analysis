@@ -1,6 +1,6 @@
 ---
 title: "Chapter 8 Fitting parametric regression models"
-output: word_document
+output: html_notebook
 ---
 
 ```{r}
@@ -24,7 +24,7 @@ The first thing we will do is clean the data load the data
 
 ### DataSet
 
-voltages <- read.csv("voltages.csv", header=T, sep =";")
+voltages <- read.csv("voltagesT.csv", header=T, sep =";")
 head(voltages)
 
 ```
