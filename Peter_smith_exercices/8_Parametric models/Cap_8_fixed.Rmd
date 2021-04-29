@@ -97,6 +97,60 @@ knitr::include_graphics("814.PNG")
 
 
 ```{r}
-loglogistic <- survreg(Surv(voltages$time))
+
+lLogistic30<- survreg(Surv(time[1:11], cens[1:11])~1, data = voltages ,dist = "loglogistic")
+lLogistic32<- survreg(Surv(time[12:26], cens[12:26])~1, data = voltages ,dist = "loglogistic")
+lLogistic34<- survreg(Surv(time[27:45], cens[27:45])~1, data = voltages ,dist = "loglogistic")
+lLogistic36<- survreg(Surv(time[46:60], cens[46:60])~1, data = voltages ,dist = "loglogistic")
+
+
+```
+
+```{r}
+knitr::include_graphics("LL.PNG")
+```
+
+```{r}
+### loglogistic 30 KV
+
+time <- voltages$time
+
+a30 <- exp(-(3.803895/0.659181))
+y30 <- 1/0.659181
+st30 <- 1/(1+(a30*voltages$time[1:11])^y30)
+lLog30 <- log(st30)
+
+### loglogistic 32 KV
+
+a32 <- exp(-(2.322379/1.288298))
+y32 <- 1/1.288298
+st32 <- 1/(1+(a32*voltages$time[12:26])^y32)
+lLog32 <- log(st32)
+
+### loglogistic 34 KV
+
+a34 <- exp(-(1.833179/0.8521807))
+y34 <- 1/0.8521807
+st34 <- 1/(1+(a34*voltages$time[27:45])^y34)
+lLog34 <- log(st34)
+### loglogistic 36 KV
+
+a36 <- exp(-(0.8649962/0.5964721))
+y36 <- 1/0.5964721
+st36 <- 1/(1+(a36*voltages$time[46:60])^y36)
+lLog36 <- log(st36)
+
+### lognormal
+
+plot(logtime[1:11],lLog30,col="red", pch = 19 , ylab= "Log-logistic position", xlab="Log(Faliure time)", main = "Log-logistic")
+
+plot(logtime[12:26],lLog32,col="blue", pch = 19)
+plot(logtime[27:45],lLog34 ,col="green", pch = 19)
+plot(logtime[46:60],lLog36,col="orange", pch = 19)
+
+
+
+
+
 ```
 
