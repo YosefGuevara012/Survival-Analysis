@@ -15,12 +15,12 @@ attach(prostatic);
 head(prostatic)
 ```
 
-#### Estadisticas descriptivas Tiempos de sobrevivencia
+#### Estadisticas descriptivas Tiempo (meses) de sobrevivencia
 
 ```{r}
 par(mfrow=c(1,2))
-hist(time, main = "Frecuencia Tiempos sobrevivencia", ylab="Frecuencia", xlab="Tiempos", cex.main=0.8)
-boxplot(time, xlab="Tiempos")
+hist(time, main = "Frecuencia (meses) sobrevivencia", ylab="Frecuencia", xlab="Tiempo (meses)", cex.main=0.8)
+boxplot(time, xlab="Tiempo (meses)")
 ```
 
 #### Creación de subsets.
@@ -35,17 +35,17 @@ treatment2 <- subset(prostatic, treatment == 2)
 
 ```
 
-#### Estadisticas descriptivas Tiempos de sobrevivencia por tratamiento
+#### Estadisticas descriptivas Tiempo (meses) de sobrevivencia por tratamiento
 
 ```{r}
 par(mfrow=c(2,2))
 
-hist(treatment1$time,main = "Frecuencia Tiempos sobrevivencia tratamiento 1", ylab="Frecuencia", xlab="Tiempos", cex.main=0.8)
-boxplot(treatment1$time,xlab="Tiempos")
+hist(treatment1$time,main = "Tratamiento con Placebo", ylab="Frecuencia", xlab="(meses)", cex.main=0.8)
+boxplot(treatment1$time,xlab="Tiempo (meses)")
 
 
-hist(treatment2$time,main = "Frecuencia Tiempos sobrevivencia tratamiento 2", ylab="Frecuencia", xlab="Tiempos", cex.main=0.8)
-boxplot(treatment2$time,xlab="Tiempos")
+hist(treatment2$time,main = "Tratamiento con DES", ylab="Frecuencia", xlab="Tiempo (meses)", cex.main=0.8)
+boxplot(treatment2$time,xlab="Tiempo (meses)")
 
 ```
 ```{r}
@@ -59,12 +59,12 @@ treatment2 <- subset(treatment2, treatment2$time >20)
 ```{r}
 par(mfrow=c(2,2))
 
-hist(treatment1$time,main = "Frecuencia Tiempos sobrevivencia tratamiento 1", ylab="Frecuencia", xlab="Tiempos", cex.main=0.8)
-boxplot(treatment1$time,xlab="Tiempos")
+hist(treatment1$time,main = "Frecuencia Tiempo (meses) sobrevivencia tratamiento 1", ylab="Frecuencia", xlab="Tiempo (meses)", cex.main=0.8)
+boxplot(treatment1$time,xlab="Tiempo (meses)")
 
 
-hist(treatment2$time,main = "Frecuencia Tiempos sobrevivencia tratamiento 2", ylab="Frecuencia", xlab="Tiempos", cex.main=0.8)
-boxplot(treatment2$time,xlab="Tiempos")
+hist(treatment2$time,main = "Frecuencia Tiempo (meses) sobrevivencia tratamiento 2", ylab="Frecuencia", xlab="Tiempo (meses)", cex.main=0.8)
+boxplot(treatment2$time,xlab="Tiempo (meses)")
 
 ```
 #### Calculos de Esperanza de vida para tramiento 1
@@ -124,8 +124,8 @@ cbind(St1,St2)
 ```{r}
 par(mfrow=c(1,2))
 
-plot(un1,St1, main="S(t) empirica Tratamiento 1", xlab = "Tiempo", ylab="S(t)", col="red")
-plot(un2,St2, main="S(t) empirica Tratamiento 2", xlab = "Tiempo", ylab="S(t)", col="blue")
+plot(un1,St1, main="S(t) empirica Placebo", xlab = "Tiempo (meses)", ylab="S(t)", col="red")
+plot(un2,St2, main="S(t) empirica DES", xlab = "Tiempo (meses)", ylab="S(t)", col="blue")
 ```
 ### MVR funcion de vida media residual a la edad t0
 
@@ -174,7 +174,7 @@ cbind(rt1,rt2)
 
 ```{r}
 riesgo.can <- muhaz(time,status, max.time = 70)
-plot(riesgo.can, main = "Estimador h(t)", xlab="Tiempo seguimiento", ylab="h(t): Tasa de riesgo")
+plot(riesgo.can, main = "Estimador h(t)", xlab="Tiempo (meses) seguimiento", ylab="h(t): Tasa de riesgo")
 ```
 ### Estimador K-M tratmientos
 
@@ -183,8 +183,7 @@ plot(riesgo.can, main = "Estimador h(t)", xlab="Tiempo seguimiento", ylab="h(t):
 
 ekm <- survfit(Surv(time,status)~treatment)
 summary(ekm)
-plot(ekm, conf.int=F,col=c("red", "blue"), xlab = "Tiempo", ylab = "S(t)", main="S(t) vía Kaplan-Meier", mark.time = TRUE, lwd = 2, las=1)
-legend("bottomleft", legend=c("Tratamiento 1","Tratamiento 2"), lty = 1, lwd = 2, col=c("red", "blue"), bty="n")
+
 
 ```
 ### Summary Estimador K-M Grupos
@@ -198,9 +197,11 @@ summary(ekm2)
 ### Estimador K-M por tratmientos
 
 ```{r}
-par(mfrow=c(1,2))
-plot(ekm1, main= "EKM Tratamiento 1", ylab="S(t)", xlab="Tiempo", col="red")
-plot(ekm2, main= "EKM Tratamiento 2", ylab="S(t)", xlab="Tiempo", col="blue")
+par(mfrow=c(1,3))
+plot(ekm, conf.int=F,col=c("red", "blue"), xlab = "Tiempo (meses)", ylab = "S(t)", main="S(t) vía Kaplan-Meier", mark.time = TRUE, lwd = 2, las=1)
+legend("bottomleft", legend=c("Placebo","DES"), lty = 1, lwd = 2, col=c("red", "blue"), bty="n")
+plot(ekm1, main= "EKM Placebo", ylab="S(t)", xlab="Tiempo (meses)", col="red")
+plot(ekm2, main= "EKM DES", ylab="S(t)", xlab="Tiempo (meses)", col="blue")
 ```
 ### Estimador Nelson-Alen  tratmientos
 
@@ -211,13 +212,6 @@ summary(ena)
 ```
 
 
-```{r}
-# Estimador NA  Grupos
-
-plot(ena, conf.int=F,col=c("red", "blue"), xlab = "Tiempo", ylab = "S(t)", main="S(t) via Nelson-Alen", mark.time = TRUE, lwd = 2, las=1)
-legend("bottomleft", legend=c("Tratamiento 1","Tratamiento 2"), lty = 1, lwd = 2, col=c("red", "blue"), bty="n")
-
-```
 # Estimador Nelson-Alen por tratamientos  
 
 ```{r}
@@ -237,9 +231,11 @@ summary(ena2)
 
 ```{r}
 
-par(mfrow=c(1,2))
-plot(ena1, main= "ENA Tratamiento 1", ylab="S(t)", xlab="Tiempo", col="red")
-plot(ena2, main= "ENA Tratamiento 2", ylab="S(t)", xlab="Tiempo", col="blue")
+par(mfrow=c(1,3))
+plot(ena, conf.int=F,col=c("red", "blue"), xlab = "Tiempo (meses)", ylab = "S(t)", main="S(t) via Nelson-Alen", mark.time = TRUE, lwd = 2, las=1)
+legend("bottomleft", legend=c("Placebo","DES"), lty = 1, lwd = 2, col=c("red", "blue"), bty="n")
+plot(ena1, main= "ENA Placebo", ylab="S(t)", xlab="Tiempo (meses)", col="red")
+plot(ena2, main= "ENA DES", ylab="S(t)", xlab="Tiempo (meses)", col="blue")
 ```
 ### Ajuste a modelos probabilistcos
 
