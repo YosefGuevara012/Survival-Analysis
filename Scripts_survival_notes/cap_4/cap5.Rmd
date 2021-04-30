@@ -59,15 +59,6 @@ plot(tekm, -log(st),pch=16,xlab="Tiempo",sub="Exponencial", ylab="-log(S(t))", c
 
 ```
 
-```{r}
-
-library(ggplot2)
-
-km.frame <- as.data.frame(cbind(tekm,st,AG))
-
-ggplot(km.frame, aes(x=tekm, y=-log(st), color=AG)) +
-  geom_point()
-```
 
 
 ```{r}
@@ -95,8 +86,6 @@ km.AG1 <- survfit(Surv(t2,cen2)~1)
 st1<-km.AG1$surv
 tekm1<-km.AG1$time
 
-plot(tekm0, -log(st0),pch=16,xlab="Tiempo",sub="Exponencial", ylab="-log(S(t))")
-points(tekm1, -log(st1))
 
 t <- c(t,t2)
 cen <- c(cen1, cen2)

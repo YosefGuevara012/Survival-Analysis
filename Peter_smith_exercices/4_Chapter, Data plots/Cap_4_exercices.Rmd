@@ -6,7 +6,6 @@ output: word_document
 ### Required libraries
 ```{r}
 
-library(matlib)
 ```
 
 ```{r}
@@ -135,6 +134,7 @@ sum(heart$Days > 1000)
 Then by the definition 1.3:
 
 $$S_{69}\left(1000\right)=\frac{1}{69}\sum \:_{i=1}^{69}\:I\left(1000,\infty \:\right)\left(Y_i\right)=\frac{8}{69}=0.1159$$
+
 #### Confidence interval
 
 The approximate confidence interval based in two standard error is:

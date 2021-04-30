@@ -4,6 +4,11 @@ output: html_notebook
 ---
 
 ```{r}
+library("survival")
+```
+
+
+```{r}
 stress <- read.csv("stress.csv", header=T, sep =";")
 attach(stress)
 head(stress)
@@ -59,16 +64,5 @@ km.model <- survfit(Surv(time,rep(1,length(time)))~ as.factor(level))
 km.model
 ```
 
-```{r}
-plot(km.model)
-```
-```{r}
 
-logtime <- log(km.model$time)
-logSurv <- -log(km.model$surv)
-
-```
-```{r}
-plot(logSurv, logtime)
-```
 
