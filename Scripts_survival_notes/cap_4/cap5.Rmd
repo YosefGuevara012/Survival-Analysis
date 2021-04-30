@@ -103,6 +103,34 @@ m<-(cbind(t,cen,AG,cgb))
 
 ```
 
+
+```{r}
+reg_weibull<-survreg(Surv(datos$t, datos$cen)~datos$cgb,dist='weibull')
+reg_weibull
+alpha<-1/reg_weibull$scale
+alpha
+reg_weibull$loglik
+```
+```{r}
+
+reg_exp<-survreg(Surv(datos$t, datos$cen)~datos$cgb,
+dist='exponential')
+reg_exp$loglik
+
+print("--------------------------------------------------------")
+reg_weibull<-survreg(Surv(datos$t, datos$cen)~datos$cgb,
+dist='weibull')
+reg_weibull$loglik
+alpha<-1/reg_weibull$scale
+alpha
+
+print("--------------------------------------------------------")
+reg_lognormal<-survreg(Surv(datos$t, datos$cen)~datos$cgb,
+dist='lognormal')
+reg_lognormal$loglik
+
+```
+
 ```{r}
 reg_exp1<-survreg(Surv(t, cen)~1, dist='exponential')
 reg_exp1

@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Chapter 8. Fitting Parametric Regression Models"
 output: word_document
 ---
 
@@ -10,26 +10,53 @@ library(survival)
 ```{r}
 knitr::include_graphics("8_3.PNG")
 ```
+### Carga de los datos
+
+Se cargan los datos al entorno en formato de DataFrame, se crean 4 factores bajo la covariable KV (Kilo Volts), 30,32,34,46 que se refieren a cada uno de los grupos de estudio.
+
 ```{r}
 voltages <- read.csv("voltages.csv", header = T, sep = ",")
+voltages$KV <- as.factor(voltages$K)
+```
+Se visualizan los datos y el formato de cada columna del data Frame.
+ 
+```{r}
 str(voltages)
 ```
 
 ```{r}
 knitr::include_graphics("8_31.PNG")
 ```
+### Estimación de la sobrevida vida Kaplan-Meier (EKM)
+
+Para verificar si los datos hacen parte de un modelo acelerado o hacen parte de un modelo de datos de modelo de tiempo de vida acelerada, se creara un modelo de Kaplan-Meier para estimar el valor de los datos de supervivencia.
 
 ```{r}
-voltages$KV <- as.factor(voltages$K)
+
 km.voltages <- survfit(Surv(time,cens)~KV, data=voltages)
 summary(km.voltages)
 ```
+### Graficos de la estimación de la sobrevida via Kaplan-Meier (EKM)
+
+### Diagnostico 1.
+
+Una primera forma de verificar si los datos se ajustan a un modelo de riesgos proporcionales lo podemos hacer mediante la visualización de la estimación de la sobrevida vía  EKM.
 
 ```{r}
 
-plot(km.voltages, conf.int=F,col=c("red", "blue", "green", "orange"), xlab = "Time to breakdown", ylab = "S(t)", main="Comparing the survival time for the Group of Voltages", mark.time = TRUE, lwd = 2, las=1)
+plot(km.voltages, conf.int=F,col=c("red", "blue", "green", "orange"), xlab = "Time to breakdown", ylab = "S(t)", main="S(t) for the Group of Voltages", mark.time = TRUE, lwd = 2, las=1)
 legend("topright", legend=c("32KV","30KV","34KV","36KV"), lty = 1, lwd = 2, col=c("blue", "red", "green", "orange"), bty="n")
 ```
+Como se puede ver los estimadores para los grupos 32,34,36, se cruzan entre sí, lo cual es un primer indicativo que NO se pueda cumplir el modelos de riesgos proporcionales. 
+
+### Graficos de la estimación de la sobrevida via Kaplan-Meier (EKM)
+
+### Diagnostico 2.
+
+Para verificar que efectivamente no se cumple los gráficos No se ajusten al modelo, ajustamos los datos a cada una de las diferentes distribuciones.
+
+Dicho lo anterior  extraemos los valores de la Supervivencia estimada y la ajustados a los modelos probabilísticos Weibull, exponencial y logarítmico.
+
 ```{r}
 St <- km.voltages$surv
 logtime <- log(km.voltages$time)
@@ -40,6 +67,8 @@ lognormal <- qnorm(St)
 voltages <- cbind(voltages,St,logtime,weibull,exponential,lognormal)
 ```
 
+
+### Graficos ajuste a los modelos Probailisticos (EKM)
 
 ```{r}
 
@@ -68,6 +97,111 @@ legend("bottomleft", legend=c("30KV", "32KV", "34KV", "36KV"), col = c("red","bl
 
 ```
 
+Una vez más se observa claramente que las curvas para los modelos estimados se cruzan entre sí, indicando nuevamente la ausencia de un modelos de riesgos proporcionales.
+
+### Diagnostico 3
+
+Como siguiente paso crearemos una función para el diagnostico 3 visualizaremos el riesgo empírico y el riesgo acumulado para lo que se construye la siguiente función.
+
+
+```{r}
+
+
+### Los siguientes ciclos calculan todos los datos para el riesgo empírico, para facilitar el cálculo los datos censurados se rellenan con ceros.
+
+CumulativeHazard <- function(len,k,time,Cens){
+  
+  Emp.h <- c()
+  
+  for(i in 1:len){
+  
+    if(Cens[i] == 0){
+    
+      Emp.h[i]= 0
+
+    
+    }else{
+    
+      Emp.h[i] = 1/k[i]
+
+    }
+  
+}
+
+cum.H <- cumsum(Emp.h)
+
+  for(i in 1:len){
+  
+    if(Cens[i] == 0){
+    
+      cum.H[i]= 0
+
+    }
+  }
+
+
+  return (as.data.frame(cbind(time,Cens, k, Emp.h, cum.H)))
+  
+}
+
+
+
+```
+
+
+Para facilitar el calculo dividiremos el dataset en 4 grupos, un para cada nivel de voltaje
+
+```{r}
+
+
+V30 <- subset(voltages, voltages$KV == 30)
+V32 <- subset(voltages, voltages$KV == 32)
+V34 <- subset(voltages, voltages$KV == 34)
+V36 <- subset(voltages, voltages$KV == 36)
+
+
+
+```
+
+Ahora llamaremos a la función para el calculo de los riesgos de cada grupo de voltajes
+
+```{r}
+HV30 <- CumulativeHazard(length(V30$time), seq(length(V30$time),1),V30$time, V30$cens)
+HV32 <- CumulativeHazard(length(V32$time), seq(length(V32$time),1),V32$time, V32$cens)
+HV34 <- CumulativeHazard(length(V34$time), seq(length(V34$time),1),V34$time, V34$cens)
+HV36 <- CumulativeHazard(length(V36$time), seq(length(V36$time),1),V36$time, V36$cens)
+
+
+```
+
+### Graficos de ajuste las funciones de h(t) y H(t)
+
+```{r}
+
+par(mfrow=c(1,2))
+
+plot(HV30$time,HV30$Emp.h, col="red",type="l", lwd = 2, main = "Riesgo empirico", ylab = "Riegos empirico", xlab = "Ciclos hasta el fallo")
+lines(HV32$time,HV32$Emp.h, col="blue", lwd = 2)
+lines(HV34$time,HV34$Emp.h, col="green", lwd = 2)
+lines(HV36$time,HV36$Emp.h, col="orange", lwd = 2)
+
+legend("bottomright", legend=c("30KV", "32KV", "34KV", "36KV"), col = c("red","blue","green","orange"), pch = 19, bty = "n")
+
+plot(HV30$time,HV30$cum.H, col="red",type="l", lwd = 2, main = "Riesgo Acumulado", ylab = "Riesgo acumulado", xlab = "Ciclos hasta el fallo")
+lines(HV32$time,HV32$cum.H, col="blue", lwd = 2)
+lines(HV34$time,HV34$cum.H, col="green", lwd = 2)
+lines(HV36$time,HV36$cum.H, col="orange", lwd = 2)
+
+legend("bottomright", legend=c("30KV", "32KV", "34KV", "36KV"), col = c("red","blue","green","orange"), pch = 19, bty = "n")
+```
+Se comprueba con el Diagnostico 3, no se sigue el modelo de riesgos proporcionales, por el contrario pareciera que se sigue un modelo de vida acelerado, como es de esperarse para los modelos paramétricos de supervivencia pues estos no necesitan ser modelos de riesgos proporcionales. Muchos modelos paramétricos son modelos de vida acelerados
+
+
+### Ajuste al modelo Weibull
+
+Finalmente, y como lo solicita el ejercicio se ajustan los datos al modelo Weibull, con el fin de verificar si proporciona el ajuste correcto
+
+
 ```{r}
 
 lm30 <- lm(weibull[1:10] ~ logtime[1:10])
@@ -90,10 +224,29 @@ plot(weibull[46:59] ~ logtime[46:59], pch=16, xlab="log(Faliure time)", sub="36K
 abline(lm36, col ="orange")
 
 ```
+Graficamente podemos comprobar que el modelo se ajusta bastante bien a una distibucion Weibull
+
+```{r}
+
+Weibull_voltages<-survreg(Surv(voltages$time, voltages$cens) ~ voltages$KV, dist='weibull')
+alpha<-1/Weibull_voltages$scale
+
+Weibull_voltages
+alpha
+Weibull_voltages$loglik
+
+```
+Para una distribución ji-cuadrado, con p = 0.28, se evidencia que la distribución sigue una distribución weibull, con un alpha = 0.7664
 
 ```{r}
 knitr::include_graphics("8_5.PNG")
 ```
+### Se cargan los datos de los Switches 
+
+Se cargan los datos al entorno en formato de DataFrame, se crea una variable tipo factores dummy llamada grupo que divide los Switches entre los que fallaron en A y los que fallaron en B
+
+##### Visualización de los Datos
+
 ```{r}
 
 swt <- read.csv("switches.csv", header=T, sep =";")
@@ -105,6 +258,9 @@ head(swt)
 ```{r}
 knitr::include_graphics("8_51.PNG")
 ```
+### Separación de los datos
+
+Para facilitar el analisis se separan los datos en dos subset de datos diferentes, los switches que fallaron en A y los que fallaron en B.
 
 ```{r}
 GroupA <- subset(swt, Group == "A")
