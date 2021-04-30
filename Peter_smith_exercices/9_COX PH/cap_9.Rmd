@@ -122,6 +122,37 @@ knitr::include_graphics("99b.PNG")
 ```
 
 ```{r}
+martinagale<- residuals(cox.heart, type = "martingale")
+```
+
+```{r}
+coxsnell <- -(martinagale - heart$Cens)
+```
+
+
+```{r}
+fit_coxsnell <- coxph(formula = Surv(coxsnell, Cens) ~ 1,
+                      data    = heart,
+                      ties    = c("efron","breslow","exact")[1])
+
+base_haz <- basehaz(fit_coxsnell, centered = FALSE)
+
+head(base_haz)
+```
+
+```{r}
+require("ggplot2")
+
+ggplot(data = base_haz, mapping = aes(x = time, y = hazard)) +
+    geom_point() +
+    scale_x_continuous(limit = c(0,3.5)) +
+    scale_y_continuous(limit = c(0,3.5)) +
+    labs(x = "Cox-Snell residuals as pseudo observed times",
+         y = "Estimated cumulative hazard at pseudo observed times") +
+    theme_bw() + theme(legend.key = element_blank())
+```
+
+```{r}
 knitr::include_graphics("99c.PNG")
 ```
 
