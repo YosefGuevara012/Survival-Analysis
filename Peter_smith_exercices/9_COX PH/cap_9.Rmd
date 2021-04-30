@@ -48,6 +48,11 @@ hepatitis <- read.csv("hepatitis.csv", header = T, sep =",")
 head(hepatitis)
 ```
 
+Compararemos que tan similar es la experiencia de supervivencia para ambos grupos mediante el Logrank test.
+
+Pra ellos lo primero que debemos hacer es ajustar nuestros datos el modelo cox.ph, con H0: La función de supervivencia es igual para ambos grupos
+
+
 ```{r}
 
 hepatitis$group <- as.factor(hepatitis$group)
@@ -55,6 +60,7 @@ hepatitis.fit <- coxph(Surv(hepatitis$time, hepatitis$cens) ~ hepatitis$group)
 
 summary(hepatitis.fit)
 ```
+Dado que el logrank test p = 0.06 Se rechaza H0, no es decir que las funciones de supervivencia son diferentes para ambos grupos.
 
 ```{r}
 knitr::include_graphics("95.PNG")
@@ -68,6 +74,7 @@ knitr::include_graphics("95a.PNG")
 cystic <- read.csv("cystic.csv", header = T, sep =",")
 head(cystic)
 ```
+#### Se cargan los datos
 
 ```{r}
 
@@ -77,12 +84,17 @@ cystic.fit <- coxph(Surv(cystic$time, cystic$cens) ~ cystic$treatment)
 summary(cystic.fit)
 
 ```
+Se puede ver que una persona con el tratamiento 2 es un 12% más propensa a morir que una persona con el tratamiento 3, el tratamiento 1 se comporta como la linea base So(t).
 
 ```{r}
 knitr::include_graphics("95b.PNG")
 ```
+Para este ajuste se tiene que la linea base de la funcion de supervivencia para ambos tratamientos es:
 
-$$\hat{S}\left(t|x\right)=\left\{\begin{matrix}\hat{S_0}\left(t\right)^{exp\left\{-2.1132\right\}}\:&,\:si\:tratamiento\:2\:\\ \:\:\hat{S_0}\left(t\right)^{exp\left\{-4.6696\right\}}&,\:si\:tratamiento\:3\:\end{matrix}\right.$$
+
+$$\hat{S}\left(y|x\right)=\left\{\begin{matrix}\hat{S_0}\left(y\right)^{exp\left\{-2.1132\right\}}\:&,\:si\:tratamiento\:2\:\\ \:\:\hat{S_0}\left(y\right)^{exp\left\{-4.6696\right\}}&,\:si\:tratamiento\:3\:\end{matrix}\right.$$
+
+Gracias al ajuste se procede a calcular el riesgo base y la función de supervivencia base
 
 ```{r}
 
@@ -92,15 +104,21 @@ H0<-H$hazard
 S0<-exp(-H0)
 round(cbind(tpos,S0,H0),digits=5)
 ```
+Una vez con estos datos generamos el gráficos de la probabilidad estimada para cada uno de los tratamientos.
+
 ```{r}
 plot(tpos,S0^(exp(-2.1132)),ylim=c(0,1),type="l",xlab="Time",ylab="S(t|x)", col="blue")
 lines(tpos,S0^(exp(-4.6696)), col="red")
-legend("bottomleft", legend=c("Treatment 1", "Treatment 2"), col = c("blue","red"), lty = 1, bty = "n")
+lines(tpos,S0, col="green")
+legend("bottomleft", legend=c("Tratamiento 1", "Tratamiento 2", "Tratamiento 3"), col = c("green","blue","red"), lty = 1, bty = "n")
 ```
+Se puede ver claramente que el mejor tratamiento es el tratamiento 3, pues los tiempos de sobrevivencia son mayores.
 
 ```{r}
 knitr::include_graphics("99.PNG")
 ```
+#### Se cargan los datos
+
 ```{r}
 heart <- read.csv("heart_data.csv", header= T, sep=";")
 head(heart)
@@ -110,25 +128,35 @@ head(heart)
 knitr::include_graphics("99a.PNG")
 ```
 
+### Ajuste del modelo.
+
 ```{r}
 cox.heart <- coxph(Surv(heart$Days,heart$Cens)~ heart$Age + heart$T5)
 summary(cox.heart)
 ```
 
 
-
 ```{r}
 knitr::include_graphics("99b.PNG")
 ```
+### Construccion de los residuales Cox-Snell para CoxPH
+
+Se calcula como la diferencia entre los residuales martingale y la censura. La pendiente debe ser de aproximadamente 45 grados.
+
+### Captura de los resiguales de martingale
 
 ```{r}
 martinagale<- residuals(cox.heart, type = "martingale")
 ```
 
+### Calculo de los residuos CoxSnell
+
+
 ```{r}
 coxsnell <- -(martinagale - heart$Cens)
 ```
 
+A continuación, el residuo de Cox-Snell para ajustar un modelo nulo de Cox y obtener el estimador de riesgo acumulativo de Nelson-Aalen.
 
 ```{r}
 fit_coxsnell <- coxph(formula = Surv(coxsnell, Cens) ~ 1,
@@ -140,28 +168,44 @@ base_haz <- basehaz(fit_coxsnell, centered = FALSE)
 head(base_haz)
 ```
 
+Para visualizar los residuales CoxSnell tenemos que:
+
 ```{r}
-require("ggplot2")
 
-ggplot(data = base_haz, mapping = aes(x = time, y = hazard)) +
-    geom_point() +
-    scale_x_continuous(limit = c(0,3.5)) +
-    scale_y_continuous(limit = c(0,3.5)) +
-    labs(x = "Cox-Snell residuals as pseudo observed times",
-         y = "Estimated cumulative hazard at pseudo observed times") +
-    theme_bw() + theme(legend.key = element_blank())
+plot(base_haz$time,base_haz$hazard,ylim=c(0,4), xlim=c(0,4),ylab="Harzard acumulado", xlab="Residuos CoxSnell", col="blue", main="Residuos Cox-Snell")
+abline(lm(base_haz$hazard~base_haz$time), col ="red")
+
 ```
-
+Este grafico muestra un intercepto cernad
 ```{r}
 knitr::include_graphics("99c.PNG")
 ```
+Para este caso crearemos otros 2 modelos que compararemos con el modelo que tiene en cuenta tanto la edad como T5
 
+### Modelo coxph con edad
 ```{r}
 cox.heart.age <- coxph(Surv(heart$Days,heart$Cens)~ heart$Age)
 summary(cox.heart.age)
 ```
-
+### Modelo coxph con T5
 ```{r}
 cox.heart.T5 <- coxph(Surv(heart$Days,heart$Cens)~ heart$T5)
 summary(cox.heart.T5)
 ```
+### Comparacion mediante anova.
+
+```{r}
+anova(cox.heart,cox.heart.age,cox.heart.T5 , test = "LRT")
+```
+Esta comparación nos muestra que no existe un diferencia significativa entre el modelo con las variables edad y t5, y el modelo que solo tiene en cuenta a T5, dado que P es muy pequeño. Esto nos da a entender que el modelo más simple que solo se relaciona con T5 es más optimo para seleccionarce. 
+
+### Verificación del modelo a elegir 
+
+Finalmente verificamos el resultado anterior mediante el AIC
+
+```{r}
+require("MASS")
+Reg_paso<-stepAIC(cox.heart)
+Reg_paso
+```
+Como vemos el menor AIC es el pertenece al modelo que solo tiene como covariable a T5, por ende este es el mejor modelo y es el indicado para seleccionarse, por otro lado verificamos que la Edad no es una variable regresora significativa.
